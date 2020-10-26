@@ -7,6 +7,7 @@ import {
   pluck,
   filter,
   toArray,
+  share,
 } from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
@@ -54,7 +55,9 @@ export class ForecastService {
         };
       }),
       // combine the 5 separately emitted objects into an array
-      toArray()
+      toArray(),
+      // let all subscribers share the same observable pipe, no more duplicate HTTP requests!
+      share()
     );
   }
 

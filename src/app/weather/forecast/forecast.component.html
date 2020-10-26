@@ -1,5 +1,10 @@
-<!-- use async pipe to directly use observables in template -->
-<div *ngFor="let forecast of forecast$ | async">
-  {{ forecast.temp | number: "1.0-0" }}&#176;C
-  {{ forecast.dateString | date: "E" }}
-</div>
+<ul class="list-group">
+  <!-- use async pipe to directly use observables in template -->
+  <li
+    *ngFor="let forecast of forecast$ | async"
+    class="weather-item list-group-item"
+  >
+    <p class="temp">{{ forecast.temp | number: "1.0-0" }}&#176;C</p>
+    <p class="day">{{ forecast.dateString | date: "E" }}</p>
+  </li>
+</ul>
