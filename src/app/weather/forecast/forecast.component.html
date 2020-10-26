@@ -1,4 +1,5 @@
-<div *ngFor="let forecast of forecastData">
+<!-- use async pipe to directly use observables in template -->
+<div *ngFor="let forecast of forecast$ | async">
   {{ forecast.temp | number: "1.0-0" }}&#176;C
   {{ forecast.dateString | date: "E" }}
 </div>
