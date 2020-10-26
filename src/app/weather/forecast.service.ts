@@ -1,13 +1,20 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, mergeMap, switchMap, pluck, filter } from 'rxjs/operators';
+import {
+  map,
+  mergeMap,
+  switchMap,
+  pluck,
+  filter,
+  toArray,
+} from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 interface OpenWeatherResponse {
   list: {
     dt_txt: string;
     main: {
-      tem: number;
+      temp: number;
     };
   }[];
 }
@@ -35,10 +42,19 @@ export class ForecastService {
       ),
       // all value after switchMap will be the http response emitted from new observable, forget about getCurrentLocation
       pluck('list'), // only emit the response.list (an array of 40 objects)
-      // mergeMap is similar to switchMap, but will keep all returned observables
+      // mergeMap is similar to switchMap, but will return and keep all 40 observables
       mergeMap((value) => of(...value)), // "of" is an observable, it will take in every array element as args and emit them one by one
-      // use "filter" to pick 1 element from every 8 resultes in the array
-      filter((value, index) => index % 8 === 0)
+      // use "filter" to pick 1 element in every 8 resultes to emit 5 weather objects
+      filter((value, index) => index % 8 === 0),
+      // convert the 5 huge objects into 5 smaller objects.
+      map((value) => {
+        return {
+          dateString: value.dt_txt,
+          temp: value.main.temp,
+        };
+      }),
+      // combine the 5 separately emitted objects into an array
+      toArray()
     );
   }
 
