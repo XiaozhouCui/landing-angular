@@ -56,7 +56,7 @@ export class ForecastService {
       }),
       // combine the 5 separately emitted objects into an array
       toArray(),
-      // let all subscribers share the same observable pipe, no more duplicate HTTP requests!
+      // Multicast: let all subscribers share the same observable pipe, no more duplicate HTTP requests!
       share()
     );
   }
