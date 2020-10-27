@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
+import { scan } from 'rxjs/operators';
 
 interface Command {
   id: number;
@@ -11,14 +12,32 @@ interface Command {
   providedIn: 'root',
 })
 export class NotificationsService {
-  messages: Subject<Command>;
+  // Subject can get data into pipeline(chaining .next(data)), Observable can't
+  messagesInput: Subject<Command>;
+  // Subject will automatically become Observable after chaining a .pipe()
+  // output will emit an array of Command objects
+  messagesOutput: Observable<Command[]>;
+
   constructor() {
-    this.messages = new Subject<Command>();
+    this.messagesInput = new Subject<Command>();
+    this.messagesOutput = this.messagesInput.pipe(
+      // scan is like Array.reduce(), taking in an accumulator and current value and return processed results
+      // acc is the messages array, value is the current command object thrown into this subject
+      scan((acc: Command[], value: Command) => {
+        if (value.type === 'clear') {
+          // if a 'clear' command is thrown in, remove that command object with given ID from the messages array
+          return acc.filter((command) => command.id !== value.id);
+        } else {
+          // if a 'success' or 'error' command is thrown in, add that command to the messages array
+          return [...acc, value];
+        }
+      }, []) // initial value for accumulator (messages array) is an empty array
+    );
   }
 
   addSuccess(message: string) {
-    // calling .next(message) will throw a new value into the messages subject
-    this.messages.next({
+    // calling .next(message) will throw a new value (command object) into the messages subject
+    this.messagesInput.next({
       id: this.randomId(),
       text: message,
       type: 'success',
@@ -26,7 +45,7 @@ export class NotificationsService {
   }
 
   addError(message: string) {
-    this.messages.next({
+    this.messagesInput.next({
       id: this.randomId(),
       text: message,
       type: 'error',
@@ -34,7 +53,7 @@ export class NotificationsService {
   }
 
   clearMessage(id: number) {
-    this.messages.next({
+    this.messagesInput.next({
       id,
       type: 'clear',
     });
