@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { scan } from 'rxjs/operators';
 
-interface Command {
+export interface Command {
   id: number;
   type: 'success' | 'error' | 'clear';
-  text?: string; // text property is optional, marked by "?"
+  text?: string; // text property is optional, marked with "?"
 }
 
 @Injectable({
@@ -36,20 +36,31 @@ export class NotificationsService {
   }
 
   addSuccess(message: string) {
-    // calling .next(message) will throw a new value (command object) into the messages subject
+    const id = this.randomId();
+    // calling .next(command) will throw a new value (command object) into the messages subject
     this.messagesInput.next({
-      id: this.randomId(),
+      id,
       text: message,
       type: 'success',
     });
+
+    setTimeout(() => {
+      this.clearMessage(id);
+    }, 5000);
   }
 
   addError(message: string) {
+    const id = this.randomId();
+
     this.messagesInput.next({
-      id: this.randomId(),
+      id,
       text: message,
       type: 'error',
     });
+
+    setTimeout(() => {
+      this.clearMessage(id);
+    }, 5000);
   }
 
   clearMessage(id: number) {
