@@ -7,6 +7,9 @@ import { tap, map, switchMap, pluck } from 'rxjs/operators';
 export interface Article {
   title: string;
   url: string;
+  source: {
+    name: string;
+  };
 }
 
 // raw HTTP response format (emitted from switchMap operator)
