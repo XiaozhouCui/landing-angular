@@ -80,7 +80,7 @@ export class ForecastService {
         (err) => observer.error(err) // emit an error
       );
     }).pipe(
-      retry(1),
+      retry(2),
       tap(
         // first arg of tap is called when observerable emits a value
         () => {
