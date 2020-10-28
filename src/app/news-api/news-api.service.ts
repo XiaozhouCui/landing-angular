@@ -4,7 +4,7 @@ import { Subject, Observable } from 'rxjs';
 import { tap, map, switchMap, pluck } from 'rxjs/operators';
 
 // extracted articles from HTTP response (emitted from pluck operator)
-interface Article {
+export interface Article {
   title: string;
   url: string;
 }
@@ -33,6 +33,7 @@ export class NewsApiService {
   numberOfPages: Subject<number>;
 
   constructor(private http: HttpClient) {
+    this.numberOfPages = new Subject();
     this.pagesInput = new Subject();
     // by chaining .pipe(), "pagesInput" Subject will become Observable (cold and unicast)
     this.pagesOutput = this.pagesInput.pipe(
@@ -59,6 +60,7 @@ export class NewsApiService {
     );
   }
 
+  // pagesInput Subject need a "page" passed into it from outside
   getPage(page: number) {
     this.pagesInput.next(page);
   }
