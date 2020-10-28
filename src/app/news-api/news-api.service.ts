@@ -1,7 +1,16 @@
-import { HttpParams } from '@angular/common/http';
+import { HttpParams, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
-import { tap, map, switchMap } from 'rxjs/operators';
+import { tap, map, switchMap, pluck } from 'rxjs/operators';
+
+interface NewsApiResponse {
+  totalResults: number;
+  // articles is an array of objects
+  articles: {
+    title: string;
+    url: string;
+  }[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -13,13 +22,13 @@ export class NewsApiService {
   private country = 'au';
 
   // pagesInput is the selected page number in pagination
-  pagesInput: Subject<number>; // Subject is a generic type, requires 1 type arg (number)
+  private pagesInput: Subject<number>; // Subject is a generic type, requires 1 type arg (number)
   // pagesOutput observable will emit article list
-  pagesOutput: Observable<any>; // Observable is a generic type, requires 1 type arg (type arg from response)
-  // total number of pages in pagination
-  numberOfPages: Observable<number>;
+  pagesOutput: Observable<any>; // Observable is a generic type, requires 1 type arg
+  // total number of pages in pagination, Subject because pagesInput.pipe(tap()) need to tell it what value to emit (Observable can't do this!)
+  numberOfPages: Subject<number>;
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.pagesInput = new Subject();
     // by chaining .pipe(), "pagesInput" Subject will become Observable (cold and unicast)
     this.pagesOutput = this.pagesInput.pipe(
@@ -30,7 +39,23 @@ export class NewsApiService {
           .set('country', this.country)
           .set('pageSize', String(this.pageSize))
           .set('page', String(page));
-      })
+      }),
+      // params are the results from map() operator
+      switchMap((params) => {
+        // .get() is a generic function, need a type arg
+        return this.http.get<NewsApiResponse>(this.url, { params });
+        // http.get() will return a new observable
+      }),
+      tap((response) => {
+        const totalPages = Math.ceil(response.totalResults / this.pageSize);
+        // numberOfPages is a Subject, we can pass totalPages into it by calling .next(totalPages)
+        this.numberOfPages.next(totalPages);
+      }),
+      pluck('articles')
     );
+  }
+
+  getPage(page: number) {
+    this.pagesInput.next(page);
   }
 }
